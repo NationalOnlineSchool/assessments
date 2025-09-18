@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NOS Clinical Assessments</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <header class="text-center mb-10">
+      <h1 class="text-4xl font-bold text-gray-800">National Online School</h1>
+      <p class="text-lg text-gray-600 mt-2">Assessment tools</p>
+    </header>
+
+    <main class="grid grid-cols-1 gap-6">
+      <!-- ORS/SRS -->
+      <a href="./orssrs/" class="block bg-white rounded-xl shadow hover:shadow-md transition-shadow p-6 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-gray-800">ORS / SRS</h2>
+        <p class="text-gray-600 mt-2">Session outcome and alliance measures.</p>
+        <div class="mt-4">
+          <span class="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded">Open</span>
+        </div>
+      </a>
+
+      <!-- Student self-assessment -->
+      <a href="./selfassessment/" class="block bg-white rounded-xl shadow hover:shadow-md transition-shadow p-6 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-gray-800">Student Self-Assessment</h2>
+        <p class="text-gray-600 mt-2">7 domains, student-rated Likert with emoji UI.</p>
+        <div class="mt-4">
+          <span class="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded">Open</span>
+        </div>
+      </a>
+
+      <!-- Staff screener -->
+      <a href="./staffscreener/" class="block bg-white rounded-xl shadow hover:shadow-md transition-shadow p-6 border border-gray-200">
+        <h2 class="text-2xl font-semibold text-gray-800">Staff Screener</h2>
+        <p class="text-gray-600 mt-2">7 domains, staff-rated Likert matrix.</p>
+        <div class="mt-4">
+          <span class="inline-block bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded">Open</span>
+        </div>
+      </a>
+    </main>
+
+    <footer class="text-center text-sm text-gray-500 mt-10">
+      <p>&copy; <span id="year"></span> National Online School</p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
