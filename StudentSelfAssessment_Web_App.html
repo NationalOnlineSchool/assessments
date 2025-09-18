@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Self-Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .emoji-button {
+            transition: all 0.2s ease;
+            transform: scale(1);
+        }
+        .emoji-button:hover {
+            transform: scale(1.1);
+        }
+        .emoji-button.selected {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 3px #3b82f6;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Student Self-Assessment</h1>
+            <p class="text-lg text-gray-600">Take your time and answer honestly - there are no right or wrong answers!</p>
+        </div>
+
+        <!-- Student Information -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Student Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="studentName" class="block text-sm font-medium text-gray-700 mb-2">Student Name</label>
+                    <input type="text" id="studentName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label for="assessmentDate" class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <input type="date" id="assessmentDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="interventionType" class="block text-sm font-medium text-gray-700 mb-2">Assessment Type</label>
+                    <select id="interventionType" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select type</option>
+                        <option value="pre-intervention">Pre-Intervention</option>
+                        <option value="post-intervention">Post-Intervention</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Form -->
+        <div id="assessmentForm" class="space-y-8">
+            <!-- Domain sections will be inserted here -->
+        </div>
+
+        <!-- Submit Button -->
+        <div id="submitSection" class="text-center mt-12 no-print">
+            <button id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                Complete Assessment
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden mt-12 space-y-8">
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Your Results</h2>
+                
+                <!-- Student Information Display -->
+                <div id="studentInfoDisplay" class="bg-gray-50 p-4 rounded-lg mb-6"></div>
+                
+                <!-- Overall Score -->
+                <div id="overallScore" class="text-center mb-8 p-6 rounded-lg"></div>
+                
+                <!-- Domain Scores Table -->
+                <div class="overflow-x-auto mb-8">
+                    <table class="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="border border-gray-200 px-4 py-3 text-left font-semibold text-gray-700">Domain</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold text-gray-700">Score</th>
+                                <th class="border border-gray-200 px-4 py-3 text-center font-semibold text-gray-700">Max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="domainScoresTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- Domain Response Boxes (full-width Likert layout) -->
+                <div id="domainBreakdown" class="space-y-6 mb-8"></div>
+
+                <!-- Raw Scores -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Raw Scores (CSV Format):</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <code id="rawScores" class="text-sm text-gray-600 break-all"></code>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-4 justify-center no-print">
+                    <button id="printBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md">
+                        📄 Print to PDF
+                    </button>
+                    <button id="copyBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md">
+                        📋 Copy CSV Data
+                    </button>
+                    <button id="retakeBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors shadow-md">
+                        🔄 Retake Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const domains = [
+            {
+                title: "How I see myself",
+                questions: [
+                    "I feel confident in who I am.",
+                    "I believe I have strengths that make me unique.",
+                    "I feel proud of my achievements.",
+                    "I accept myself, even when I make mistakes.",
+                    "I feel good about myself without needing to compare to others."
+                ]
+            },
+            {
+                title: "Understanding and managing worries",
+                questions: [
+                    "I can recognise what I'm feeling.",
+                    "I know what helps me when I feel anxious or worried.",
+                    "I can calm myself when I feel upset or overwhelmed.",
+                    "I feel able to ask for help when I feel stressed or worried.",
+                    "I can use techniques (like deep breathing) to help me feel more in control."
+                ]
+            },
+            {
+                title: "Staying calm and in control",
+                questions: [
+                    "I can tell when I'm starting to get angry or frustrated.",
+                    "I can stop myself from reacting in ways that might hurt myself or others.",
+                    "I know safe ways to express strong emotions.",
+                    "I have strategies to manage big emotions like frustration or anger.",
+                    "I can stay calm even when things don't go my way."
+                ]
+            },
+            {
+                title: "Ready to learn",
+                questions: [
+                    "I feel ready to learn at the start of each day.",
+                    "I find it easy to focus during lessons.",
+                    "I can manage distractions and stay on task.",
+                    "I am motivated to work toward my learning goals.",
+                    "I can ask for help when I don't understand something."
+                ]
+            },
+            {
+                title: "Talking and getting along with others",
+                questions: [
+                    "I feel comfortable speaking to others in lessons or groups.",
+                    "I can listen and take turns during conversations.",
+                    "I find it easy to understand how others might be feeling.",
+                    "I feel confident joining in with group activities or discussions.",
+                    "I can express myself clearly, so others understand me."
+                ]
+            },
+            {
+                title: "Staying organised and flexible",
+                questions: [
+                    "I can plan or organise what I need to do each day.",
+                    "I am able to use my time well to finish tasks.",
+                    "I can get started with tasks on my own.",
+                    "I can handle changes to my routine without getting too upset.",
+                    "I can switch between different tasks without it feeling too hard."
+                ]
+            },
+            {
+                title: "Bouncing back and coping with challenges",
+                questions: [
+                    "I can stay calm when things don't go as planned.",
+                    "I can bounce back after something goes wrong.",
+                    "I can let someone know when I need help.",
+                    "I can keep going when something is hard.",
+                    "I can still feel hopeful, even when things are difficult."
+                ]
+            }
+        ];
+
+        const scaleOptions = [
+            { value: 4, emoji: "😊", label: "Yes", description: "This is true for me most of the time" },
+            { value: 3, emoji: "😐", label: "Sometimes", description: "This is true for me some of the time" },
+            { value: 2, emoji: "😕", label: "Not sure", description: "This is only true a little bit / I'm not sure" },
+            { value: 1, emoji: "😢", label: "No", description: "This is not true for me" }
+        ];
+
+        let responses = {};
+
+        /* ---------------- Cookie Utilities ---------------- */
+        const COOKIE_NAME = 'ssa_state';
+        function setCookie(name, value, days) {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/";
+        }
+        function getCookie(name) {
+            const v = document.cookie.split('; ').find(row => row.startsWith(name + '='));
+            return v ? decodeURIComponent(v.split('=')[1]) : null;
+        }
+        function eraseCookie(name) {
+            document.cookie = name + "=; Max-Age=0; path=/";
+        }
+        function saveStateToCookie() {
+            const data = {
+                studentName: document.getElementById('studentName').value,
+                assessmentDate: document.getElementById('assessmentDate').value,
+                interventionType: document.getElementById('interventionType').value,
+                responses
+            };
+            try {
+                setCookie(COOKIE_NAME, JSON.stringify(data), 30);
+            } catch(e) {
+                // Silently ignore if cookie too large
+            }
+        }
+        function loadStateFromCookie() {
+            const raw = getCookie(COOKIE_NAME);
+            if (!raw) return;
+            try {
+                const data = JSON.parse(raw);
+                if (data.studentName) document.getElementById('studentName').value = data.studentName;
+                if (data.assessmentDate) document.getElementById('assessmentDate').value = data.assessmentDate;
+                if (data.interventionType) document.getElementById('interventionType').value = data.interventionType;
+                if (data.responses && typeof data.responses === 'object') {
+                    responses = data.responses;
+                    // Re-apply button selections visually
+                    Object.keys(responses).forEach(d => {
+                        Object.keys(responses[d]).forEach(q => {
+                            const val = responses[d][q];
+                            const btn = document.querySelector(`.emoji-button[data-domain="${d}"][data-question="${q}"][data-value="${val}"]`);
+                            if (btn) {
+                                btn.parentElement.querySelectorAll('.emoji-button').forEach(s => s.classList.remove('selected','border-blue-500'));
+                                btn.classList.add('selected','border-blue-500');
+                            }
+                        });
+                    });
+                }
+            } catch(e) {
+                // bad cookie JSON; ignore
+            }
+        }
+
+        function createAssessmentForm() {
+            const form = document.getElementById('assessmentForm');
+            
+            domains.forEach((domain, domainIndex) => {
+                const domainDiv = document.createElement('div');
+                domainDiv.className = 'bg-white rounded-xl shadow-lg p-6 mb-6';
+                
+                domainDiv.innerHTML = `
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        Domain ${domainIndex + 1}: ${domain.title}
+                    </h2>
+                    <div class="space-y-6">
+                        ${domain.questions.map((question, questionIndex) => `
+                            <div class="border-b border-gray-100 pb-6 last:border-b-0">
+                                <p class="text-lg text-gray-700 mb-4 font-medium">${question}</p>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    ${scaleOptions.map(option => `
+                                        <button type="button" 
+                                                class="emoji-button p-4 border-2 border-gray-200 rounded-lg text-center hover:border-blue-300 focus:outline-none focus:border-blue-500 transition-all"
+                                                data-domain="${domainIndex}" 
+                                                data-question="${questionIndex}" 
+                                                data-value="${option.value}">
+                                            <div class="text-3xl mb-2">${option.emoji}</div>
+                                            <div class="font-semibold text-gray-800">${option.label}</div>
+                                            <div class="text-xs text-gray-600 mt-1">${option.description}</div>
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                form.appendChild(domainDiv);
+            });
+        }
+
+        function handleResponse(event) {
+            if (!event.target.closest('.emoji-button')) return;
+            
+            const button = event.target.closest('.emoji-button');
+            const domain = parseInt(button.dataset.domain);
+            const question = parseInt(button.dataset.question);
+            const value = parseInt(button.dataset.value);
+            
+            // Remove selected class from siblings
+            const siblings = button.parentElement.querySelectorAll('.emoji-button');
+            siblings.forEach(sibling => sibling.classList.remove('selected', 'border-blue-500'));
+            
+            // Add selected class to clicked button
+            button.classList.add('selected', 'border-blue-500');
+            
+            // Store response
+            if (!responses[domain]) responses[domain] = {};
+            responses[domain][question] = value;
+
+            saveStateToCookie();            
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const totalQuestions = domains.length * 5;
+            let answeredQuestions = 0;
+            for (let domain in responses) {
+                answeredQuestions += Object.keys(responses[domain]).length;
+            }
+            
+            // Check if student info is filled
+            const name = document.getElementById('studentName').value.trim();
+            const date = document.getElementById('assessmentDate').value;
+            const type = document.getElementById('interventionType').value;
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const allQuestionsAnswered = answeredQuestions === totalQuestions;
+            const allInfoFilled = name && date && type;
+            
+            if (allQuestionsAnswered && allInfoFilled) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Complete Assessment';
+            } else {
+                submitBtn.disabled = true;
+                let missing = [];
+                if (!allInfoFilled) missing.push('student info');
+                if (!allQuestionsAnswered) missing.push(`${totalQuestions - answeredQuestions} questions`);
+                submitBtn.textContent = `Complete Assessment (Missing: ${missing.join(', ')})`;
+            }
+
+            // Persist current info fields too
+            saveStateToCookie();
+        }
+
+        function calculateResults() {
+            const domainScores = [];
+            let totalScore = 0;
+            const rawScores = [];
+            
+            domains.forEach((domain, domainIndex) => {
+                let domainTotal = 0;
+                domain.questions.forEach((question, questionIndex) => {
+                    const score = responses[domainIndex][questionIndex];
+                    domainTotal += score;
+                    rawScores.push(score);
+                });
+                domainScores.push({
+                    title: domain.title,
+                    score: domainTotal,
+                    max: 20
+                });
+                totalScore += domainTotal;
+            });
+            
+            return { domainScores, totalScore, rawScores };
+        }
+
+        function displayResults() {
+            const { domainScores, totalScore, rawScores } = calculateResults();
+            
+            // Get student information
+            const name = document.getElementById('studentName').value.trim();
+            const date = document.getElementById('assessmentDate').value;
+            const type = document.getElementById('interventionType').value;
+            
+            // Student info
+            const studentInfoDisplay = document.getElementById('studentInfoDisplay');
+            studentInfoDisplay.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div>
+                        <span class="font-semibold text-gray-700">Student:</span>
+                        <div class="text-lg font-medium text-gray-900">${name}</div>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700">Date:</span>
+                        <div class="text-lg font-medium text-gray-900">${new Date(date).toLocaleDateString()}</div>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700">Assessment Type:</span>
+                        <div class="text-lg font-medium text-gray-900">${type === 'pre-intervention' ? 'Pre-Intervention' : 'Post-Intervention'}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Hide form and show results
+            document.getElementById('assessmentForm').style.display = 'none';
+            document.getElementById('submitSection').style.display = 'none';
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            // Overall score with new thresholds
+            const overallDiv = document.getElementById('overallScore');
+            let message, bgColor, textColor;
+
+            if (totalScore >= 106) {
+                message = "You're showing lots of strengths!  You might not need extra support right now.";
+                bgColor = "bg-green-100";
+                textColor = "text-green-800";
+            } else if (totalScore >= 71) {
+                message = "You're doing well in some areas, but we may be able to help with the others.";
+                bgColor = "bg-yellow-100";
+                textColor = "text-yellow-800";
+            } else {
+                message = "You might be finding some things tought - we're here to help and support you.";
+                bgColor = "bg-red-100";
+                textColor = "text-red-800";
+            }
+            
+            overallDiv.innerHTML = `
+                <div class="${bgColor} ${textColor} p-6 rounded-lg">
+                    <div class="text-3xl font-bold mb-2">Total Score: ${totalScore}/140</div>
+                    <div class="text-lg">${message}</div>
+                </div>
+            `;
+            
+            // Domain scores table
+            const tableBody = document.getElementById('domainScoresTable');
+            tableBody.innerHTML = domainScores.map((domain, index) => `
+                <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
+                    <td class="border border-gray-200 px-4 py-3 font-medium">Domain ${index + 1}: ${domain.title}</td>
+                    <td class="border border-gray-200 px-4 py-3 text-center font-semibold">${domain.score}</td>
+                    <td class="border border-gray-200 px-4 py-3 text-center">${domain.max}</td>
+                </tr>
+            `).join('');
+
+            // Domain response breakdown (Likert-style: rows = questions, cols = 1..4), full-width blocks
+            const breakdownContainer = document.getElementById('domainBreakdown');
+            const orderedScale = [...scaleOptions].sort((a, b) => a.value - b.value);
+
+            breakdownContainer.innerHTML = domains.map((domain, domainIndex) => {
+                const header = `
+                    <div class="grid grid-cols-5">
+                        <div class="bg-gray-50 px-3 py-2 font-semibold text-sm text-left border border-gray-200">Question</div>
+                        ${orderedScale.map(opt => `
+                            <div class="bg-gray-50 px-3 py-2 font-semibold text-sm text-center border border-gray-200">
+                                <div class="text-base leading-none">${opt.emoji}</div>
+                                <div class="text-[10px] text-gray-600 mt-1">${opt.value}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                const rows = domain.questions.map((q, questionIndex) => {
+                    const selectedValue = responses[domainIndex][questionIndex];
+                    const cells = orderedScale.map(opt => {
+                        const selected = opt.value === selectedValue;
+                        return `
+                            <div class="px-3 py-2 text-center border border-gray-200 ${selected ? 'bg-blue-50 font-semibold' : 'text-gray-300'}">
+                                ${selected
+                                    ? `<div class="text-xl leading-none">${opt.emoji}</div>
+                                       <div class="text-[10px] mt-1 text-gray-700">${selectedValue}</div>`
+                                    : '•'}
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="grid grid-cols-5">
+                            <div class="px-3 py-2 text-sm border border-gray-200 text-gray-800">${q}</div>
+                            ${cells}
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-4 pt-4 pb-2">
+                            <h4 class="text-md font-semibold text-gray-800">
+                                Domain ${domainIndex + 1}: ${domain.title}
+                            </h4>
+                        </div>
+                        <div class="px-0 pb-4">
+                            ${header}
+                            ${rows}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Raw scores
+            document.getElementById('rawScores').textContent = rawScores.join(',');
+        }
+
+        function printToPDF() {
+            window.print();
+        }
+
+        function copyCSVData() {
+            const { rawScores } = calculateResults();
+            const csvData = rawScores.join(',');
+            navigator.clipboard.writeText(csvData).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    btn.classList.add('bg-purple-600', 'hover:bg-purple-700');
+                }, 2000);
+            });
+        }
+
+        function retakeAssessment() {
+            responses = {};
+            eraseCookie(COOKIE_NAME);
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('assessmentForm').style.display = 'block';
+            document.getElementById('submitSection').style.display = 'block';
+            
+            // Clear selections
+            document.querySelectorAll('.emoji-button').forEach(button => {
+                button.classList.remove('selected', 'border-blue-500');
+            });
+            
+            // Clear student information (keep today's date)
+            document.getElementById('studentName').value = '';
+            document.getElementById('assessmentDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('interventionType').value = '';
+            
+            updateSubmitButton();
+            window.scrollTo(0, 0);
+        }
+
+        // Event listeners
+        document.addEventListener('click', handleResponse);
+        document.getElementById('submitBtn').addEventListener('click', displayResults);
+        document.getElementById('printBtn').addEventListener('click', printToPDF);
+        document.getElementById('copyBtn').addEventListener('click', copyCSVData);
+        document.getElementById('retakeBtn').addEventListener('click', retakeAssessment);
+        
+        // Persist changes from info fields
+        document.getElementById('studentName').addEventListener('input', updateSubmitButton);
+        document.getElementById('assessmentDate').addEventListener('change', updateSubmitButton);
+        document.getElementById('interventionType').addEventListener('change', updateSubmitButton);
+
+        // Initialize
+        createAssessmentForm();
+        // Default date to today, then load cookie to override if present
+        document.getElementById('assessmentDate').value = new Date().toISOString().split('T')[0];
+        loadStateFromCookie();
+        updateSubmitButton();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98102f6bd2551239',t:'MTc1ODE5MTYwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
