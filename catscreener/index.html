@@ -388,19 +388,19 @@
       // Overall thresholds (Green ≥106, Yellow 71–105, Red ≤70)
       const overallDiv = document.getElementById("overallScore");
       let message, bg, fg;
-      if (totalScore >= 106) {
-        message = "Doing well";
+      if (totalScore >= 90) {
+        message = "They're showing lot's of strength - support might be only need to be minimal!";
         bg = "bg-green-100"; fg = "text-green-800";
-      } else if (totalScore >= 71) {
-        message = "Some areas of support";
+      } else if (totalScore >= 61) {
+        message = "There are some areas of strength, but we will be able to help with the other areas.";
         bg = "bg-yellow-100"; fg = "text-yellow-800";
       } else {
-        message = "Lots of areas of support";
+        message = "They're showing signs that there is lots we can support with.";
         bg = "bg-red-100"; fg = "text-red-800";
       }
       overallDiv.innerHTML = `
         <div class="${bg} ${fg} p-6 rounded-lg">
-          <div class="text-3xl font-bold mb-2">Total Score: ${totalScore}/140</div>
+          <div class="text-3xl font-bold mb-2">Total Score: ${totalScore}/120</div>
           <div class="text-lg">${message}</div>
         </div>
       `;
