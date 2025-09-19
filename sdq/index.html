@@ -21,12 +21,16 @@
       user-select: none;
     }
     @media print {
-      body { background: #fff !important; }
-      #sdqForm { display: none !important; }
-      .no-print { display: none !important; }
-      #results { display: block !important; }
-      canvas { max-width: 100% !important; height: auto !important; }
-    }
+    body { background: #fff !important; }
+    /* Hide just the action buttons/links */
+    .no-print { display: none !important; }
+    /* Tidy container for print */
+    #reportContainer { box-shadow: none; padding: 0; }
+    /* Avoid awkward row splits */
+    table { break-inside: auto; }
+    tr, td, th { break-inside: avoid; page-break-inside: avoid; }
+    h1, h2, h3 { page-break-after: avoid; }
+  }
   </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
@@ -117,8 +121,9 @@
       <pre id="csvOutput" class="bg-gray-100 p-4 rounded text-sm overflow-auto"></pre>
       <div class="flex gap-3 mt-2 no-print">
         <button type="button" onclick="downloadCSV()" class="px-4 py-2 bg-blue-600 text-white rounded">Download CSV</button>
-        <button type="button" onclick="window.print()" class="px-4 py-2 bg-red-600 text-white rounded">Print / Save as PDF</button>
-      </div>
+        <button type="button" onclick="printWholeDoc()" class="px-4 py-2 bg-red-600 text-white rounded no-print">
+  Print / Save as PDF
+</button>
     </div>
   </div>
 
@@ -286,7 +291,18 @@
       resultsEl.classList.remove('hidden');
       resultsEl.scrollIntoView({behavior:'smooth'});
     });
-
+function printWholeDoc() {
+    const results = document.getElementById('results');
+    const wasHidden = results.classList.contains('hidden');
+    // Ensure all sections are visible for print
+    if (wasHidden) results.classList.remove('hidden');
+    // Give the browser a tick to reflow, then print
+    setTimeout(() => {
+      window.print();
+      // Restore prior state after print if needed
+      if (wasHidden) results.classList.add('hidden');
+    }, 50);
+  }
     function downloadCSV() {
       const csv = document.getElementById('csvOutput').textContent || '';
       if (!csv.trim()) { alert('Please complete and submit the form first.'); return; }
