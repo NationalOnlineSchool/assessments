@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDQ Screener</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Strengths and Difficulties Questionnaire</h1>
+    <p class="text-gray-600 mb-6">Please rate each item honestly. Select one option per question.</p>
+
+    <form id="sdqForm" class="space-y-6">
+      <!-- Example Question -->
+      <div>
+        <label class="block font-semibold text-gray-800 mb-2">1. Considerate of other people’s feelings (SDQ1)</label>
+        <div class="flex gap-4">
+          <label><input type="radio" name="SDQ1" value="0" required> Not True</label>
+          <label><input type="radio" name="SDQ1" value="1"> Somewhat True</label>
+          <label><input type="radio" name="SDQ1" value="2"> Certainly True</label>
+        </div>
+      </div>
+      <!-- Repeat this block for SDQ2 to SDQ25 -->
+
+      <!-- Placeholder to repeat quickly -->
+      <div id="questionContainer"></div>
+
+      <button type="submit" class="mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-xl">Submit</button>
+    </form>
+
+    <div id="results" class="mt-8 hidden">
+      <h2 class="text-xl font-bold mb-2">Results</h2>
+      <pre id="csvOutput" class="bg-gray-100 p-4 rounded text-sm overflow-auto"></pre>
+      <button onclick="copyToClipboard()" class="mt-2 px-4 py-1 bg-green-600 text-white rounded">Copy CSV</button>
+    </div>
+  </div>
+
+  <script>
+    const questions = [
+      "Considerate of other people’s feelings", "Restless, overactive, cannot stay still for long", "Often complains of headaches, stomach-aches or sickness", "Shares readily with other children (toys, treats, pencils etc.)", "Often loses temper",
+      "Would rather be alone than with other children", "Generally well behaved, usually does what adults request", "Many worries or often seems worried", "Helpful if someone is hurt, upset or feeling ill", "Constantly fidgeting or squirming",
+      "Has at least one good friend", "Often fights with other children or bullies them", "Often unhappy, down-hearted or tearful", "Generally liked by other children", "Easily distracted, concentration wanders",
+      "Nervous or clingy in new situations, easily loses confidence", "Kind to younger children", "Often lies or cheats", "Picked on or bullied by other children", "Often volunteers to help others (parents, teachers, children)",
+      "Thinks things out before acting", "Steals from home, school or elsewhere", "Gets along better with adults than with other children", "Many fears, easily scared", "Sees tasks through to the end, good attention span"
+    ];
+
+    const subscales = {
+      Emotional: [3, 8, 13, 16, 24],
+      Conduct: [5, 7, 12, 18, 22],
+      Hyperactivity: [2, 10, 15, 21, 25],
+      Peer: [6, 11, 14, 19, 23],
+      Prosocial: [1, 4, 9, 17, 20]
+    };
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById("questionContainer");
+      for (let i = 2; i <= 25; i++) {
+        const q = document.createElement("div");
+        q.className = "mt-4";
+        q.innerHTML = `
+          <label class="block font-semibold text-gray-800 mb-2">${i}. ${questions[i - 1]} (SDQ${i})</label>
+          <div class="flex gap-4">
+            <label><input type="radio" name="SDQ${i}" value="0" required> Not True</label>
+            <label><input type="radio" name="SDQ${i}" value="1"> Somewhat True</label>
+            <label><input type="radio" name="SDQ${i}" value="2"> Certainly True</label>
+          </div>
+        `;
+        container.appendChild(q);
+      }
+    });
+
+    document.getElementById("sdqForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const scores = {};
+      for (let i = 1; i <= 25; i++) {
+        scores[`SDQ${i}`] = Number(formData.get(`SDQ${i}`));
+      }
+
+      const output = {
+        Date: new Date().toISOString().split("T")[0],
+        Pupil_ID: "",
+        ...scores
+      };
+
+      // Subscale totals
+      let csvLine = `${output.Date},${output.Pupil_ID}`;
+      let subscaleTotals = {};
+      for (let [name, indexes] of Object.entries(subscales)) {
+        const sum = indexes.reduce((a, i) => a + scores[`SDQ${i}`], 0);
+        subscaleTotals[name] = sum;
+      }
+      const totalDiff = subscaleTotals.Emotional + subscaleTotals.Conduct + subscaleTotals.Hyperactivity + subscaleTotals.Peer;
+
+      const allScores = Array.from({ length: 25 }, (_, i) => scores[`SDQ${i + 1}`]).join(", ");
+      csvLine += `, ${allScores}, ${subscaleTotals.Emotional}, ${subscaleTotals.Conduct}, ${subscaleTotals.Hyperactivity}, ${subscaleTotals.Peer}, ${subscaleTotals.Prosocial}, ${totalDiff}`;
+
+      document.getElementById("csvOutput").textContent = `Date, Pupil_ID, SDQ1 to SDQ25, Emotional, Conduct, Hyperactivity, Peer, Prosocial, TotalDifficulty\n` + csvLine;
+      document.getElementById("results").classList.remove("hidden");
+    });
+
+    function copyToClipboard() {
+      const text = document.getElementById("csvOutput").textContent;
+      navigator.clipboard.writeText(text);
+    }
+  </script>
+</body>
+</html>
